@@ -1,0 +1,1016 @@
+/* ==========================================================================
+   點名系統 (Attendance System) - Modern Design System
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Theme Colors */
+  --bg-dark: #0f172a;
+  --bg-card: rgba(30, 41, 59, 0.75);
+  --bg-card-hover: rgba(51, 65, 85, 0.85);
+  --bg-card-solid: #1e293b;
+  --bg-input: rgba(15, 23, 42, 0.6);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-focus: #6366f1;
+  
+  /* Brand Accents */
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-light: rgba(99, 102, 241, 0.15);
+  --secondary: #8b5cf6;
+  --accent-cyan: #06b6d4;
+  
+  /* Status Colors */
+  --status-present: #10b981;
+  --status-present-bg: rgba(16, 185, 129, 0.15);
+  --status-absent: #ef4444;
+  --status-absent-bg: rgba(239, 68, 68, 0.15);
+  --status-late: #f59e0b;
+  --status-late-bg: rgba(245, 158, 11, 0.15);
+  --status-leave: #3b82f6;
+  --status-leave-bg: rgba(59, 130, 246, 0.15);
+  
+  /* Text Colors */
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  
+  /* Glow & Shadows */
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.25);
+  --shadow-glow-success: 0 0 25px rgba(16, 185, 129, 0.3);
+  
+  /* Layout */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Outfit', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-dark);
+  background-image: 
+    radial-gradient(at 10% 10%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+    radial-gradient(at 90% 90%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Glassmorphism Panel Base */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition);
+}
+
+.glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Top Header & Navigation */
+header.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.85rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-icon {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  box-shadow: var(--shadow-glow);
+}
+
+.brand-text h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ffffff 30%, #a5b4fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-text p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Live Time & Date Display Header Widget */
+.datetime-header-widget {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid var(--border-color);
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius-full);
+}
+
+.datetime-date {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.datetime-time {
+  font-family: 'Outfit', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.05em;
+  background: rgba(56, 189, 248, 0.1);
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+/* Role Switcher Switcher Tabs */
+.role-switch-container {
+  display: flex;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border-color);
+  padding: 4px;
+  border-radius: var(--radius-full);
+}
+
+.role-btn {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--transition);
+}
+
+.role-btn.active {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #ffffff;
+  box-shadow: var(--shadow-glow);
+}
+
+.role-btn:hover:not(.active) {
+  color: var(--text-main);
+}
+
+/* Main Container Layout */
+main.app-content {
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.75rem 2rem;
+}
+
+/* Section Controls & Visibility */
+.view-section {
+  display: none;
+  animation: fadeIn 0.35s ease-out forwards;
+}
+
+.view-section.active-view {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dashboard Banner / Card Section */
+.hero-banner {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 1.5rem 2rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-banner::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-text h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.hero-text p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.today-course-badge {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md);
+  text-align: right;
+}
+
+.today-course-badge .label {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.today-course-badge .title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.today-course-badge .teacher {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Grid Layouts */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.grid-sidebar {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 1.75rem;
+}
+
+/* Front-End / Check-in Portal Styles */
+.checkin-card {
+  padding: 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.checkin-avatar-wrap {
+  position: relative;
+  margin-bottom: 1.25rem;
+}
+
+.checkin-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+}
+
+.input-group {
+  width: 100%;
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+
+.custom-input {
+  width: 100%;
+  padding: 0.85rem 1.1rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-size: 1rem;
+  outline: none;
+  transition: var(--transition);
+}
+
+.custom-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+.select-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+/* Primary Action Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #ffffff;
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.45);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  box-shadow: var(--shadow-glow-success);
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.45);
+}
+
+.btn-outline {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn-sm {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.825rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-full {
+  width: 100%;
+}
+
+/* Timetable & Schedule Cards */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.section-header h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Timetable Grid Table */
+.timetable-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+}
+
+.timetable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+.timetable th, .timetable td {
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+}
+
+.timetable th {
+  background: rgba(15, 23, 42, 0.8);
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.timetable td {
+  background: rgba(30, 41, 59, 0.4);
+  height: 85px;
+  vertical-align: top;
+  font-size: 0.85rem;
+  transition: var(--transition);
+}
+
+.timetable td:hover {
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.timetable .period-col {
+  width: 90px;
+  font-family: 'Outfit', monospace;
+  font-weight: 600;
+  color: var(--text-subtle);
+  background: rgba(15, 23, 42, 0.6);
+  vertical-align: middle;
+}
+
+.course-cell {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.15));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.course-cell:hover {
+  transform: scale(1.02);
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.course-cell .c-name {
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 0.85rem;
+  margin-bottom: 2px;
+}
+
+.course-cell .c-teacher {
+  color: #a5b4fc;
+  font-size: 0.75rem;
+}
+
+.course-cell .c-room {
+  color: var(--text-subtle);
+  font-size: 0.7rem;
+}
+
+.course-cell.highlight-today {
+  border: 2px solid var(--accent-cyan);
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+}
+
+/* Empty Timetable Slot Clickable Area */
+.empty-timetable-slot {
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition);
+}
+
+.empty-timetable-slot:hover {
+  background: rgba(99, 102, 241, 0.15) !important;
+}
+
+.empty-timetable-slot .add-slot-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-subtle);
+  font-size: 0.75rem;
+  opacity: 0.3;
+  transition: var(--transition);
+}
+
+.empty-timetable-slot:hover .add-slot-btn {
+  opacity: 1;
+  color: #a5b4fc;
+  font-weight: 600;
+}
+
+/* Back-End / Teacher Admin Dashboard Styles */
+.stat-card {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.stat-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.stat-icon.present {
+  background: var(--status-present-bg);
+  color: var(--status-present);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.stat-icon.absent {
+  background: var(--status-absent-bg);
+  color: var(--status-absent);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.stat-icon.late {
+  background: var(--status-late-bg);
+  color: var(--status-late);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.stat-icon.total {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.stat-info .num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.stat-info .label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Attendance Table */
+.data-table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.data-table th, .data-table td {
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+  background: rgba(15, 23, 42, 0.6);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.data-table tbody tr {
+  transition: var(--transition);
+}
+
+.data-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Status Pill Badges */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-pill.present {
+  background: var(--status-present-bg);
+  color: var(--status-present);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.status-pill.absent {
+  background: var(--status-absent-bg);
+  color: var(--status-absent);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.status-pill.late {
+  background: var(--status-late-bg);
+  color: var(--status-late);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.status-pill.leave {
+  background: var(--status-leave-bg);
+  color: var(--status-leave);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+/* Action Radio Buttons in Roll Call Table */
+.status-btn-group {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.status-btn {
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: rgba(15, 23, 42, 0.5);
+  color: var(--text-muted);
+  font-size: 0.775rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.status-btn:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--text-main);
+}
+
+.status-btn.active-present {
+  background: var(--status-present);
+  color: #ffffff;
+  border-color: var(--status-present);
+}
+
+.status-btn.active-absent {
+  background: var(--status-absent);
+  color: #ffffff;
+  border-color: var(--status-absent);
+}
+
+.status-btn.active-late {
+  background: var(--status-late);
+  color: #ffffff;
+  border-color: var(--status-late);
+}
+
+.status-btn.active-leave {
+  background: var(--status-leave);
+  color: #ffffff;
+  border-color: var(--status-leave);
+}
+
+/* Google Sheets Integration Panel */
+.gsheet-config-card {
+  border-left: 4px solid var(--status-present);
+}
+
+.code-box {
+  background: #090d16;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.825rem;
+  color: #38bdf8;
+  max-height: 220px;
+  overflow-y: auto;
+  position: relative;
+  white-space: pre-wrap;
+}
+
+.copy-code-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #ffffff;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.copy-code-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Modal Popup */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-content {
+  width: 90%;
+  max-width: 500px;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+  transform: translateY(0);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.modal-header h3 {
+  font-size: 1.2rem;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.toast {
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.85rem 1.25rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+.toast.success {
+  border-left: 4px solid var(--status-present);
+}
+
+.toast.error {
+  border-left: 4px solid var(--status-absent);
+}
+
+.toast.warning {
+  border-left: 4px solid var(--status-late);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Timeslot Editor Rows */
+.timeslot-editor-row input[type="time"] {
+  color-scheme: dark;
+}
+
+.timeslot-editor-row:last-child {
+  border-bottom: none;
+}
+
+/* Pulse animation for live clock */
+@keyframes clockPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.datetime-time {
+  animation: clockPulse 2s ease-in-out infinite;
+}
+
+/* Footer attribution */
+.app-footer {
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.8rem;
+  color: var(--text-subtle);
+  border-top: 1px solid var(--border-color);
+  margin-top: 2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1280px) {
+  .grid-4,
+  [style*="grid-template-columns: repeat(5, 1fr)"] {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .grid-sidebar {
+    grid-template-columns: 1fr;
+  }
+  .grid-4,
+  [style*="grid-template-columns: repeat(5, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .hero-banner {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  .today-course-badge {
+    text-align: center;
+  }
+}
+
+@media (max-width: 768px) {
+  header.app-header {
+    padding: 0.85rem 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  main.app-content {
+    padding: 1rem;
+  }
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .grid-4,
+  [style*="grid-template-columns: repeat(5, 1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+  .datetime-header-widget {
+    display: none;
+  }
+  .role-switch-container {
+    width: 100%;
+  }
+  .role-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+  }
+  .section-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  .timetable-wrapper {
+    font-size: 0.75rem;
+  }
+  .timetable th, .timetable td {
+    padding: 0.5rem;
+  }
+  .status-btn-group {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-title {
+    gap: 0.5rem;
+  }
+  .brand-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 1.1rem;
+  }
+  .brand-text h1 {
+    font-size: 1rem;
+  }
+  .checkin-avatar {
+    width: 70px;
+    height: 70px;
+    font-size: 2rem;
+  }
+}

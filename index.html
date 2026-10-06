@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧點名系統 - Google 試算表連動與個人課表</title>
+  <meta name="description" content="包含 Google 試算表自動統計、今天日期時間顯示、個人課表及授課老師資訊的前後台智慧點名系統。">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="brand-title">
+      <div class="brand-icon">🎯</div>
+      <div class="brand-text">
+        <h1>智慧點名管理系統</h1>
+        <p>Smart Roll-Call & Google Sheets Sync Platform</p>
+      </div>
+    </div>
+
+    <!-- Today's Date & Live Time Widget -->
+    <div class="datetime-header-widget">
+      <div class="datetime-date" id="header-date">📅 2026-10-05 (星期一)</div>
+      <div class="datetime-time" id="header-time">10:41:44</div>
+    </div>
+
+    <!-- Role Switcher Tabs (前台/後台) -->
+    <div class="role-switch-container">
+      <button id="btn-role-student" class="role-btn active">
+        <span>👨‍🎓</span> 前台 (學生簽到 & 課表)
+      </button>
+      <button id="btn-role-teacher" class="role-btn">
+        <span>👨‍🏫</span> 後台 (授課老師管理)
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="app-content">
+
+    <!-- =================================================================== -->
+    <!-- FRONT-END: STUDENT PORTAL (前台：學生簽到 & 個人課表)               -->
+    <!-- =================================================================== -->
+    <section id="view-student-portal" class="view-section active-view">
+      
+      <!-- Banner -->
+      <div class="hero-banner">
+        <div class="hero-text">
+          <h2>歡迎使用線上點名系統 👋</h2>
+          <p>請選擇您的學號與當前上課科目完成自主簽到，查看個人每週課表與授課老師。</p>
+        </div>
+        <div class="today-course-badge">
+          <div class="label">當前課程 / 今日提醒</div>
+          <div class="title" id="hero-current-course">Web 網頁前端開發技術</div>
+          <div class="teacher" id="hero-current-teacher">授課老師：陳志明 教授</div>
+        </div>
+      </div>
+
+      <div class="grid-sidebar">
+        
+        <!-- Left: Quick Check-In Form Card -->
+        <div class="glass-panel checkin-card">
+          <div class="checkin-avatar-wrap">
+            <div class="checkin-avatar">📝</div>
+          </div>
+          <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;">即時線上簽到</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">輸入或選擇資料完成到課登記</p>
+
+          <div class="input-group">
+            <label for="checkin-student-select">選擇簽到學生 (學號/姓名)</label>
+            <select id="checkin-student-select" class="custom-input select-input">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="checkin-course-select">選擇點名課程與授課老師</label>
+            <select id="checkin-course-select" class="custom-input select-input">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="checkin-status-select">簽到狀態</label>
+            <select id="checkin-status-select" class="custom-input select-input">
+              <option value="出席">✅ 出席 (Present)</option>
+              <option value="遲到">⚠️ 遲到 (Late)</option>
+              <option value="請假">ℹ️ 請假 (Leave)</option>
+              <option value="缺席">❌ 缺席 (Absent)</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="checkin-note-input">備註說明 (選填)</label>
+            <input type="text" id="checkin-note-input" class="custom-input" placeholder="例如：身體不適、公假原因..." />
+          </div>
+
+          <button id="btn-checkin-submit" class="btn btn-primary btn-full" style="margin-top: 0.5rem;">
+            <span>🚀</span> 立即送出簽到紀錄
+          </button>
+        </div>
+
+        <!-- Right: Student Personal Timetable (個人課表) -->
+        <div class="glass-panel" style="padding: 1.5rem;">
+          <div class="section-header">
+            <div>
+              <h3><span>📅</span> 個人每週課表與授課老師</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">點擊既有課程可簽到，點擊空白格子或右側按鈕可新增課表</p>
+            </div>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <button class="btn btn-outline btn-sm" onclick="openTimeslotsEditorModal()">
+                <span>⏱️</span> 節次時間設定
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="openAddCourseModal()">
+                <span>➕</span> 新增課表
+              </button>
+            </div>
+          </div>
+
+          <div class="timetable-wrapper">
+            <table class="timetable">
+              <thead>
+                <tr>
+                  <th class="period-col">節次 / 時間</th>
+                  <th>星期一</th>
+                  <th>星期二</th>
+                  <th>星期三</th>
+                  <th>星期四</th>
+                  <th>星期五</th>
+                </tr>
+              </thead>
+              <tbody id="timetable-grid-body">
+                <!-- Timetable rows rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Personal Records Table -->
+      <div class="glass-panel" style="margin-top: 1.75rem; padding: 1.5rem;">
+        <div class="section-header">
+          <h3><span>📋</span> 個人近期簽到歷史紀錄</h3>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">顯示最近點名數據</span>
+        </div>
+
+        <div class="data-table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>簽到時間</th>
+                <th>課程名稱</th>
+                <th>授課老師</th>
+                <th>簽到狀態</th>
+                <th>備註</th>
+              </tr>
+            </thead>
+            <tbody id="student-history-tbody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- BACK-END: TEACHER & ADMIN PORTAL (後台：授課老師管理 & 試算表統計)   -->
+    <!-- =================================================================== -->
+    <section id="view-teacher-portal" class="view-section">
+      
+      <!-- Top Stat Overview Cards -->
+      <div class="grid-4" style="margin-bottom: 1.75rem; grid-template-columns: repeat(5, 1fr);">
+        <div class="glass-panel stat-card">
+          <div class="stat-icon total">👥</div>
+          <div class="stat-info">
+            <div class="num" id="stat-total-val">10</div>
+            <div class="label">全班總人數 (Total)</div>
+          </div>
+        </div>
+
+        <div class="glass-panel stat-card">
+          <div class="stat-icon present">✅</div>
+          <div class="stat-info">
+            <div class="num" id="stat-present-val" style="color:var(--status-present);">0</div>
+            <div class="label">已到課人數 (Present)</div>
+          </div>
+        </div>
+
+        <div class="glass-panel stat-card">
+          <div class="stat-icon late">⚠️</div>
+          <div class="stat-info">
+            <div class="num" id="stat-late-val" style="color:var(--status-late);">0</div>
+            <div class="label">遲到人數 (Late)</div>
+          </div>
+        </div>
+
+        <div class="glass-panel stat-card">
+          <div class="stat-icon absent">❌</div>
+          <div class="stat-info">
+            <div class="num" id="stat-absent-val" style="color:var(--status-absent);">0</div>
+            <div class="label">未到/缺席人數 (Absent)</div>
+          </div>
+        </div>
+
+        <div class="glass-panel stat-card">
+          <div class="stat-icon total" style="background:rgba(6,182,212,0.15); color:var(--accent-cyan); border-color:rgba(6,182,212,0.3);">📚</div>
+          <div class="stat-info">
+            <div class="num" id="stat-periods-val" style="color:var(--accent-cyan);">14</div>
+            <div class="label">每週上課總節數 (Periods)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Bar & Roll-Call Management -->
+      <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 1.75rem;">
+        <div class="section-header" style="flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h3><span>👨‍🏫</span> 授課老師即時點名控制台</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">手動修改點名狀態、輸入備註並自動連動 Google 試算表</p>
+          </div>
+
+          <div style="display:flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+            <select id="admin-course-filter" class="custom-input select-input" style="width: auto; padding-right: 2rem;">
+              <!-- Populated dynamically -->
+            </select>
+
+            <button class="btn btn-outline btn-sm" onclick="openModal('modal-add-student')">
+              <span>➕</span> 新增學生
+            </button>
+
+            <button class="btn btn-success btn-sm" onclick="markAllPresent()">
+              <span>✨</span> 一鍵全班出席
+            </button>
+
+            <button id="btn-sync-gsheet-now" class="btn btn-primary btn-sm">
+              <span>📊</span> 一鍵同步至 Google 試算表
+            </button>
+
+            <button class="btn btn-outline btn-sm" onclick="exportAttendanceToCSV()">
+              <span>📥</span> 匯出 Excel/CSV
+            </button>
+
+            <button class="btn btn-outline btn-sm" onclick="exportTimetableToICS()">
+              <span>📅</span> 匯出行事曆 (.ics)
+            </button>
+
+            <button class="btn btn-outline btn-sm" onclick="openModal('modal-change-password')">
+              <span>🔑</span> 修改密碼
+            </button>
+
+            <button class="btn btn-outline btn-sm" style="color:var(--status-absent); border-color:rgba(239,68,68,0.4);" onclick="handleAdminLogout()">
+              <span>🚪</span> 登出後台
+            </button>
+          </div>
+        </div>
+
+        <!-- Student Roll Call List Table -->
+        <div class="data-table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>學生姓名 / 學號</th>
+                <th>系所名稱</th>
+                <th style="min-width: 220px;">點名狀態設定</th>
+                <th>備註註記</th>
+                <th>簽到時間</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="admin-rollcall-tbody">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Student & Teacher Management Grid -->
+      <div class="grid-2" style="margin-bottom: 1.75rem;">
+        
+        <!-- Student Roster Management Card -->
+        <div class="glass-panel" style="padding: 1.5rem;">
+          <div class="section-header">
+            <div>
+              <h3><span>🎓</span> 學生名單管理</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">新增或刪除系統學生成員</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-student')">
+              <span>➕</span> 新增學生
+            </button>
+          </div>
+
+          <div class="data-table-container" style="max-height: 280px; overflow-y: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>學號</th>
+                  <th>姓名</th>
+                  <th>系所</th>
+                  <th style="text-align: right;">操作</th>
+                </tr>
+              </thead>
+              <tbody id="admin-student-list-tbody">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Teacher & Course Management Card -->
+        <div class="glass-panel" style="padding: 1.5rem;">
+          <div class="section-header">
+            <div>
+              <h3><span>👨‍🏫</span> 授課教師與課程管理</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">新增或刪除授課教師與課程</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-course')">
+              <span>➕</span> 新增教師/課程
+            </button>
+          </div>
+
+          <div class="data-table-container" style="max-height: 280px; overflow-y: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>課程名稱</th>
+                  <th>授課老師</th>
+                  <th>時間與教室</th>
+                  <th style="text-align: right;">操作</th>
+                </tr>
+              </thead>
+              <tbody id="admin-course-list-tbody">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Google Sheets Setup & Configuration Panel -->
+      <div class="glass-panel gsheet-config-card" style="padding: 1.75rem;">
+        <div class="section-header">
+          <h3><span>📊</span> Google 試算表 (Google Sheets) 連動設定中心</h3>
+          <span class="status-pill present">自動統計有到 / 未到</span>
+        </div>
+        
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          利用免費的 <strong>Google Apps Script</strong> Webhook 服務，每次學生簽到或老師調整點名狀態時，數據皆會同步紀錄於您的 Google 試算表中！
+        </p>
+
+        <div class="grid-2">
+          
+          <!-- Left: Apps Script Code Setup Instructions -->
+          <div>
+            <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--accent-cyan);">步驟 1：複製並部署 Google Apps Script 程式碼</h4>
+            <ol style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.25rem; line-height: 1.7; margin-bottom: 1rem;">
+              <li>開啟您的 <a href="https://sheets.google.com" target="_blank" style="color: #818cf8;">Google 試算表</a>。</li>
+              <li>點選選單「<strong>擴充功能</strong>」➔「<strong>Apps Script</strong>」。</li>
+              <li>貼上右方程式碼，點選「<strong>部署</strong>」➔「<strong>新增部署</strong>」。</li>
+              <li>種類選擇「<strong>網路應用程式 (Web App)</strong>」，存取對象設定為「<strong>所有人 (Anyone)</strong>」。</li>
+              <li>複製產生的 Web App URL 網址並貼至下方輸入框。</li>
+            </ol>
+
+            <div class="input-group">
+              <label for="gsheet-url-input">Google Apps Script Web App URL 網址：</label>
+              <input type="text" id="gsheet-url-input" class="custom-input" placeholder="https://script.google.com/macros/s/.../exec" />
+            </div>
+
+            <div style="display: flex; gap: 0.75rem;">
+              <button id="btn-save-gsheet-url" class="btn btn-primary btn-sm">💾 儲存設定</button>
+              <button id="btn-test-gsheet" class="btn btn-outline btn-sm">⚡ 測試連線</button>
+            </div>
+          </div>
+
+          <!-- Right: Code Generator Box -->
+          <div style="position: relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.4rem;">
+              <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Apps Script 後端 Code (Code.gs)：</span>
+              <button id="btn-copy-gas-code" class="btn btn-outline btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;">📋 一鍵複製程式碼</button>
+            </div>
+            <pre class="code-box" id="gas-script-code"><!-- Code.gs injected --></pre>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Multi-Platform Integration & Data Export Hub -->
+      <div class="glass-panel" style="padding: 1.75rem; margin-top: 1.75rem;">
+        <div class="section-header">
+          <h3><span>🌐</span> 多平台串接與資料匯出中心 (Platform Integration Hub)</h3>
+          <span class="status-pill present">支援多種平台格式</span>
+        </div>
+
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+          本點名系統支援串接多種外部軟體與通訊平台，包含 <strong>Microsoft Excel</strong>、<strong>Google Calendar</strong>、<strong>LINE Notify 訊息通知</strong> 及標準 <strong>REST Webhook API</strong>。
+        </p>
+
+        <div class="grid-3">
+          
+          <!-- Card 1: Excel / CSV Export -->
+          <div style="background: rgba(15,23,42,0.6); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+            <div style="font-size: 1.75rem; margin-bottom: 0.5rem;">📊</div>
+            <h4 style="font-size: 1rem; margin-bottom: 0.35rem;">Microsoft Excel / CSV 匯出</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">將全班點名紀錄轉換為帶 BOM 的 UTF-8 CSV 檔案，可直接於 Excel 開啟報表。</p>
+            <button class="btn btn-outline btn-sm btn-full" onclick="exportAttendanceToCSV()">📥 下載 CSV 點名總表</button>
+          </div>
+
+          <!-- Card 2: Google / Apple Calendar -->
+          <div style="background: rgba(15,23,42,0.6); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+            <div style="font-size: 1.75rem; margin-bottom: 0.5rem;">📅</div>
+            <h4 style="font-size: 1rem; margin-bottom: 0.35rem;">Google / Apple 行事曆 (.ics)</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">一鍵匯出每週課表為標準 .ics 行事曆檔案，點擊即可加入 iPhone / 手機日曆。</p>
+            <button class="btn btn-outline btn-sm btn-full" onclick="exportTimetableToICS()">🗓️ 下載課表 .ics 檔</button>
+          </div>
+
+          <!-- Card 3: LINE Bot / LINE Notify -->
+          <div style="background: rgba(15,23,42,0.6); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+            <div style="font-size: 1.75rem; margin-bottom: 0.5rem;">💬</div>
+            <h4 style="font-size: 1rem; margin-bottom: 0.35rem;">LINE Notify 點名自動通知</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">學生簽到、缺席或遲到時，可透過 Google Apps Script 貼上權杖實時推播 LINE 訊息。</p>
+            <button class="btn btn-outline btn-sm btn-full" onclick="openModal('modal-line-notify-info')">💡 查看 LINE 串接說明</button>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- =================================================================== -->
+  <!-- MODAL: ADD NEW STUDENT (新增學生彈出視窗)                           -->
+  <!-- =================================================================== -->
+  <div id="modal-add-student" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>➕ 新增學生資料</h3>
+        <button class="modal-close" onclick="closeModal('modal-add-student')">&times;</button>
+      </div>
+      <div class="input-group">
+        <label for="new-student-id">學生學號 *</label>
+        <input type="text" id="new-student-id" class="custom-input" placeholder="例：S11211" />
+      </div>
+      <div class="input-group">
+        <label for="new-student-name">學生姓名 *</label>
+        <input type="text" id="new-student-name" class="custom-input" placeholder="例：林小華" />
+      </div>
+      <div class="input-group">
+        <label for="new-student-dept">所屬系所</label>
+        <input type="text" id="new-student-dept" class="custom-input" placeholder="例：資訊工程學系" />
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top: 1.5rem;">
+        <button class="btn btn-outline" onclick="closeModal('modal-add-student')">取消</button>
+        <button id="btn-add-student-submit" class="btn btn-primary">確認新增</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- MODAL: ADD NEW TEACHER & COURSE (新增授課教師與課程彈出視窗)          -->
+  <!-- =================================================================== -->
+  <div id="modal-add-course" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>➕ 新增授課教師與課程</h3>
+        <button class="modal-close" onclick="closeModal('modal-add-course')">&times;</button>
+      </div>
+      <div class="input-group">
+        <label for="new-course-name">課程名稱 *</label>
+        <input type="text" id="new-course-name" class="custom-input" placeholder="例：人工智慧與機器學習" />
+      </div>
+      <div class="input-group">
+        <label for="new-course-teacher">授課教師姓名 *</label>
+        <input type="text" id="new-course-teacher" class="custom-input" placeholder="例：張建華 教授" />
+      </div>
+      <div class="input-group">
+        <label for="new-course-room">上課教室</label>
+        <input type="text" id="new-course-room" class="custom-input" placeholder="例：資訊館 402" />
+      </div>
+      <div class="grid-3">
+        <div class="input-group">
+          <label for="new-course-day">上課星期</label>
+          <select id="new-course-day" class="custom-input select-input">
+            <option value="1">星期一</option>
+            <option value="2">星期二</option>
+            <option value="3">星期三</option>
+            <option value="4">星期四</option>
+            <option value="5">星期五</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="new-course-period">起始節次</label>
+          <select id="new-course-period" class="custom-input select-input">
+            <option value="1">第一節 (09:00 - 10:00)</option>
+            <option value="2">第二節 (10:10 - 11:00)</option>
+            <option value="3">第三節 (11:10 - 12:00)</option>
+            <option value="4">第四節 (13:30 - 14:20)</option>
+            <option value="5">第五節 (14:30 - 15:20)</option>
+            <option value="6">第六節 (15:30 - 16:20)</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="new-course-periods">上課節數 (學分/時數)</label>
+          <select id="new-course-periods" class="custom-input select-input">
+            <option value="1">1 節課 (1 小時)</option>
+            <option value="2" selected>2 節課 (2 小時)</option>
+            <option value="3">3 節課 (3 小時)</option>
+            <option value="4">4 節課 (4 小時)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top: 1.5rem;">
+        <button class="btn btn-outline" onclick="closeModal('modal-add-course')">取消</button>
+        <button id="btn-add-course-submit" class="btn btn-primary">確認新增</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- MODAL: ADMIN LOGIN (後台密碼驗證彈出視窗)                           -->
+  <!-- =================================================================== -->
+  <div id="modal-admin-login" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <div class="modal-header">
+        <h3 style="width:100%; text-align:center;">🔐 管理者身份驗證</h3>
+      </div>
+      <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        請輸入管理者密碼以進入授課老師控制台<br><small style="color:var(--accent-cyan);">(初始密碼：<strong>8308</strong>)</small>
+      </p>
+
+      <div class="input-group">
+        <input type="password" id="admin-login-pwd" class="custom-input" placeholder="請輸入 4 位數密碼..." style="text-align: center; font-size: 1.25rem; letter-spacing: 0.2em;" />
+        <div id="admin-login-error" style="color: var(--status-absent); font-size: 0.85rem; margin-top: 0.5rem; display: none;"></div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; gap:0.75rem; margin-top: 1.5rem;">
+        <button class="btn btn-outline" style="flex:1;" onclick="cancelAdminLogin()">取消切換</button>
+        <button id="btn-admin-login-submit" class="btn btn-primary" style="flex:1;">🔓 解鎖進入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- MODAL: CHANGE ADMIN PASSWORD (修改管理者密碼彈出視窗)               -->
+  <!-- =================================================================== -->
+  <div id="modal-change-password" class="modal-overlay">
+    <div class="modal-content" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3>🔑 修改管理者密碼</h3>
+        <button class="modal-close" onclick="closeModal('modal-change-password')">&times;</button>
+      </div>
+      
+      <div class="input-group">
+        <label for="pwd-old">當前原密碼 *</label>
+        <input type="password" id="pwd-old" class="custom-input" placeholder="例如：8308" />
+      </div>
+
+      <div class="input-group">
+        <label for="pwd-new">新密碼 *</label>
+        <input type="password" id="pwd-new" class="custom-input" placeholder="輸入新的管理者密碼" />
+      </div>
+
+      <div class="input-group">
+        <label for="pwd-confirm">再次確認新密碼 *</label>
+        <input type="password" id="pwd-confirm" class="custom-input" placeholder="再次輸入新密碼" />
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top: 1.5rem;">
+        <button class="btn btn-outline" onclick="closeModal('modal-change-password')">取消</button>
+        <button id="btn-change-pwd-submit" class="btn btn-primary">確認修改</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- MODAL: LINE NOTIFY INTEGRATION INFO (LINE 串接說明視窗)               -->
+  <!-- =================================================================== -->
+  <div id="modal-line-notify-info" class="modal-overlay">
+    <div class="modal-content" style="max-width: 550px;">
+      <div class="modal-header">
+        <h3>💬 LINE Notify 訊息自動推播串接教學</h3>
+        <button class="modal-close" onclick="closeModal('modal-line-notify-info')">&times;</button>
+      </div>
+      
+      <div style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.6;">
+        <p style="margin-bottom: 0.75rem;">
+          透過系統內建的 Google Apps Script 後端，您可以免費發送 LINE 訊息通知至老師或班級群組！
+        </p>
+        <ol style="padding-left: 1.25rem; margin-bottom: 1rem;">
+          <li>前往 <a href="https://notify-bot.line.me/zh_TW/" target="_blank" style="color:var(--accent-cyan);">LINE Notify 官網</a> 登入。</li>
+          <li>點擊右上角個人名稱 ➔ 點選「<strong>發行權杖 (Generate Token)</strong>」。</li>
+          <li>輸入權杖名稱（如：點名系統通知），選擇要發送的 LINE 群組或個人聊天室。</li>
+          <li>將取得的權杖字串加入到您的 Google Apps Script 程式碼中：
+            <pre style="background:#090d16; color:#38bdf8; padding:0.5rem; margin-top:0.4rem; border-radius:4px; font-family:monospace; font-size:0.75rem;">UrlFetchApp.fetch("https://notify-api.line.me/api/notify", {
+  method: "post",
+  headers: { Authorization: "Bearer " + LINE_TOKEN },
+  payload: { message: "點名提醒：" + studentName + " 已簽到 (" + status + ")" }
+});</pre>
+          </li>
+        </ol>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin-top: 1rem;">
+        <button class="btn btn-primary btn-sm" onclick="closeModal('modal-line-notify-info')">我知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- MODAL: EDIT TIMETABLE PERIOD TIMES (課表節次與時間自訂調整視窗)       -->
+  <!-- =================================================================== -->
+  <div id="modal-edit-timeslots" class="modal-overlay">
+    <div class="modal-content" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3>⏱️ 課表節次與時間自訂調整</h3>
+        <button class="modal-close" onclick="closeModal('modal-edit-timeslots')">&times;</button>
+      </div>
+      
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        您可自訂每一節課的名稱與上課時段。修改後課表網格與新增課程選單將自動連動更新。
+      </p>
+
+      <div id="timeslots-editor-list" style="max-height: 320px; overflow-y: auto; padding-right: 0.25rem;">
+        <!-- Dynamically rendered via JS -->
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 1.25rem;">
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-outline btn-sm" onclick="addTimeSlotRow()">➕ 新增節次</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--status-late); border-color:rgba(245,158,11,0.3);" onclick="resetTimeSlotsToDefault()">🔄 恢復預設時間</button>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-outline btn-sm" onclick="closeModal('modal-edit-timeslots')">取消</button>
+          <button id="btn-save-timeslots" class="btn btn-primary btn-sm" onclick="saveCustomTimeSlots()">💾 儲存時間設定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/googleSheets.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
