@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧點名系統 - Google 試算表連動 & 課表管理</title>
+  <!-- Google Fonts 引入 Inter 與 Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- 頂部導覽列 -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-logo">
+        <span class="logo-icon">📊</span>
+        <h1>智慧點名系統</h1>
+      </div>
+
+      <div class="mode-toggle-group">
+        <button id="btn-student-mode" class="toggle-btn active" onclick="switchMode('student')">
+          <span>🎓</span> 學生簽到模式
+        </button>
+        <button id="btn-admin-mode" class="toggle-btn" onclick="requestAdminLogin()">
+          <span>🔑</span> 授課老師後台
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主要內容區域 -->
+  <main class="main-container">
+
+    <!-- ==================== 1. 學生簽到模式頁面 ==================== -->
+    <section id="student-view" class="view-section active">
+
+      <!-- 簽到卡片 -->
+      <div class="card checkin-card">
+        <div class="card-header">
+          <h2>📝 快速學生簽到</h2>
+          <span class="badge badge-success">連線正常</span>
+        </div>
+
+        <div class="form-grid">
+          <div class="input-group">
+            <label for="student-select">選擇學生</label>
+            <select id="student-select" class="custom-input select-input" onchange="onStudentSelectChange()">
+              <option value="">-- 請選擇學生 --</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="student-dept-display">系所</label>
+            <input type="text" id="student-dept-display" class="custom-input readonly-input" placeholder="選擇學生後自動填入" readonly />
+          </div>
+
+          <div class="input-group">
+            <label for="course-select">點名課程</label>
+            <select id="course-select" class="custom-input select-input" onchange="onCourseSelectChange()">
+              <option value="">-- 請選擇課程 --</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="teacher-display">授課教師</label>
+            <input type="text" id="teacher-display" class="custom-input readonly-input" placeholder="選擇課程後自動填入" readonly />
+          </div>
+
+          <div class="input-group">
+            <label for="attendance-status">簽到狀態</label>
+            <select id="attendance-status" class="custom-input select-input">
+              <option value="出席">✅ 出席 (Present)</option>
+              <option value="遲到">⚠️ 遲到 (Late)</option>
+              <option value="請假">📄 請假 (Leave)</option>
+              <option value="曠課">❌ 曠課 (Absent)</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="checkin-time">點名時間</label>
+            <input type="text" id="checkin-time" class="custom-input readonly-input" readonly />
+          </div>
+        </div>
+
+        <div class="form-actions" style="margin-top: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+          <button id="btn-submit-checkin" class="btn btn-primary" onclick="submitCheckin()">
+            <span>🚀</span> 提交簽到紀錄
+          </button>
+          <span id="webhook-sync-status" class="sync-status text-muted">Google Sheets: 等待簽到...</span>
+        </div>
+      </div>
+
+      <!-- 個人課表預覽與行事曆 -->
+      <div class="card timetable-card" style="margin-top: 2rem;">
+        <div class="card-header">
+          <h2>📅 週課表總覽</h2>
+          <div class="header-actions">
+            <button class="btn btn-outline btn-sm" onclick="exportTimetableToICS()">
+              <span>📅</span> 匯出 .ics 行事曆
+            </button>
+          </div>
+        </div>
+
+        <div class="timetable-wrapper">
+          <table class="timetable-table">
+            <thead>
+              <tr>
+                <th style="width: 10%;">節次 / 時間</th>
+                <th style="width: 18%;">星期一</th>
+                <th style="width: 18%;">星期二</th>
+                <th style="width: 18%;">星期三</th>
+                <th style="width: 18%;">星期四</th>
+                <th style="width: 18%;">星期五</th>
+              </tr>
+            </thead>
+            <tbody id="student-timetable-body">
+              <!-- 動態渲染課表內容 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== 2. 授課老師管理後台頁面 ==================== -->
+    <section id="admin-view" class="view-section">
+
+      <!-- Webhook 設定卡片 -->
+      <div class="card">
+        <div class="card-header">
+          <h2>🔗 Google 試算表 (GAS Webhook) 串接設定</h2>
+          <button class="btn btn-outline btn-sm" onclick="showGasScriptGuide()">📖 取得 GAS 腳本範本</button>
+        </div>
+
+        <div class="input-group" style="margin-bottom: 1rem;">
+          <label for="gas-url-input">Google Apps Script Webhook URL</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="gas-url-input" class="custom-input" placeholder="https://script.google.com/macros/s/.../exec" />
+            <button class="btn btn-primary" onclick="saveGasUrl()">儲存網址</button>
+            <button class="btn btn-outline" onclick="testGasWebhook()">測試連線</button>
+          </div>
+          <small class="help-text">貼上部署後的 Webhook URL 即可同步將簽到寫入 Google Sheets。</small>
+        </div>
+      </div>
+
+      <!-- 資料管理區塊 (頁籤切換) -->
+      <div class="card" style="margin-top: 2rem;">
+        <div class="tab-header">
+          <button class="tab-btn active" onclick="switchAdminTab('records')">📋 點名紀錄清單</button>
+          <button class="tab-btn" onclick="switchAdminTab('students')">👥 學生名冊管理</button>
+          <button class="tab-btn" onclick="switchAdminTab('courses')">📚 課程教師設定</button>
+          <button class="tab-btn" onclick="switchAdminTab('settings')">⚙️ 系統與時間設定</button>
+        </div>
+
+        <!-- Tab 1: 點名紀錄清單 -->
+        <div id="tab-records" class="tab-content active">
+          <div class="table-toolbar">
+            <input type="text" id="search-records" class="custom-input" placeholder="🔍 搜尋學生姓名、學號或課程..." oninput="renderRecordsTable()" />
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-outline btn-sm" onclick="exportAttendanceToCSV()">📥 匯出 CSV</button>
+              <button class="btn btn-danger btn-sm" onclick="clearAllRecords()">🗑 清空點名紀錄</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>時間</th>
+                  <th>學號</th>
+                  <th>學生姓名</th>
+                  <th>系所</th>
+                  <th>課程名稱</th>
+                  <th>授課老師</th>
+                  <th>狀態</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="records-table-body">
+                <!-- 動態渲染點名紀錄 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 2: 學生名冊管理 -->
+        <div id="tab-students" class="tab-content">
+          <div class="table-toolbar">
+            <input type="text" id="search-students" class="custom-input" placeholder="🔍 搜尋學號或姓名..." oninput="renderStudentsTable()" />
+            <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-student')">➕ 新增學生</button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>學號</th>
+                  <th>學生姓名</th>
+                  <th>系所</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="students-table-body">
+                <!-- 動態渲染學生名冊
